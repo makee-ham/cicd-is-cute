@@ -1,4 +1,4 @@
-name: GitHub Actions 실행해보기
+name: Deploy To S3 And Invalidate Cloudfront
 
 on:
   push:
@@ -6,25 +6,29 @@ on:
       - main
 
 jobs:
-  My-Deploy-Job:
+  deploy:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Hello World 출력하기
-        run: echo "Hello World"
+      - name: Github Repository 파일 불러오기
+        uses: actions/checkout@v4
+        
+      - name: 의존성 설치
+	      run: npm i
+        
+      - name: 빌드하기
+	      run: npm run build
 
-      - name: 여러 명령어 문장 작성하기
-        run: |
-          echo "I'm so"
-          echo "sleepy"
-          pwd
+      - name: AWS Resource에 접근할 수 있게 AWS credentials 설정
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ap-northeast-2
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
-      - name: GitHub Actions 자체 저장되어 있는 변수 사용해보기
+      - name: S3 기존 파일들 전체 삭제 후 새로 업로드
         run: |
-          echo $GITHUB_REPOSITORY
-          echo $GITHUB_SHA
+	        aws s3 rm --recursive s3://my-first-bucket-is-cute
+		      aws s3 cp ./dist s3://my-first-bucket-is-cute/ --recursive
 
-      - name: GitHub Actions Secret 변수 사용해보기3
-        run: |
-          echo ${{secrets.MY_NAME}}
-          echo ${{secrets.MY_HOBBY}}
+      - name: Cloudfront 캐시 무효화
+        run: aws cloudfront create-invalidation --distribution-id ERXMI45T9YEEQ --paths "/*"
