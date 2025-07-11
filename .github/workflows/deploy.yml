@@ -11,12 +11,12 @@ jobs:
     steps:
       - name: Github Repository 파일 불러오기
         uses: actions/checkout@v4
-        
+
       - name: 의존성 설치
-	      run: npm i
-        
+        run: npm i
+
       - name: 빌드하기
-	      run: npm run build
+        run: npm run build
 
       - name: AWS Resource에 접근할 수 있게 AWS credentials 설정
         uses: aws-actions/configure-aws-credentials@v4
@@ -27,8 +27,8 @@ jobs:
 
       - name: S3 기존 파일들 전체 삭제 후 새로 업로드
         run: |
-	        aws s3 rm --recursive s3://my-first-bucket-is-cute
-		      aws s3 cp ./dist s3://my-first-bucket-is-cute/ --recursive
+          aws s3 rm --recursive s3://my-first-bucket-is-cute
+          aws s3 cp ./dist s3://my-first-bucket-is-cute/ --recursive
 
       - name: Cloudfront 캐시 무효화
         run: aws cloudfront create-invalidation --distribution-id ERXMI45T9YEEQ --paths "/*"
